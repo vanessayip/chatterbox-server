@@ -12,13 +12,15 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 var http = require('http');
-
+var fs = require('fs');
 var results = {
-  results: [{
-    username: 'name',
-    roomname: 'room',
-    text: 'some text'
-  }]
+  results: []
+  // {
+  //   username: 'name',
+  //   roomname: 'room',
+  //   text: 'some text'
+  // }
+
 };
 
 var requestHandler = function(request, response) {
@@ -49,7 +51,7 @@ var requestHandler = function(request, response) {
 
   var headers = defaultCorsHeaders;
   // The outgoing status.
-  var statusCode = 200;
+  var statusCode;
 
   // See the note below about CORS headers.
   
@@ -61,30 +63,29 @@ var requestHandler = function(request, response) {
 
   headers['Content-Type'] = 'application/json';
   
-  if (request.url !== '/classes/messages') {
-    statusCode = 404;
+  if (request.method === 'OPTIONS') {
+    statusCode = 200;
     response.writeHead(statusCode, headers);
-    response.end('error. non existent endpoint');
+    response.end();
+  } else if (request.method === 'GET') {
+    statusCode = 200;
+    response.writeHead(statusCode, headers);
+     // console.log(results)
+    // var responseBody = {results};
+    // response.end(JSON.stringify(responseBody));
+    response.end(JSON.stringify(results));
   } else if (request.method === 'POST') {
-    // var string = '';
     
     request.on('data', function(chunk) {
       var dataObj = JSON.parse(chunk);
+      for (var k in dataObj) {
+        console.log(k);
+      }
       results.results.push(dataObj);
       // results.push(dataObj);
-      console.log(results);
+      console.log(request.url, results);
     }).on('end', function() {
       
-      // response.on('error', (err) => {
-      //   console.error(err);
-      // });
-      // console.log(typeof string);
-
-      // var data = string.split('&');
-      // console.log('data: ', data);
-      // result.push({
-      //   username: data[0]
-      // })
       statusCode = 201;
       response.writeHead(statusCode, headers);
       // var responseBody = {results};
@@ -92,15 +93,13 @@ var requestHandler = function(request, response) {
            
     });
     response.end(JSON.stringify(results));
-  } else {
+  } else if (request.url !== '/classes/messages') {
+    statusCode = 404;
     response.writeHead(statusCode, headers);
-     // console.log(results)
-    // var responseBody = {results};
-    // response.end(JSON.stringify(responseBody));
-    response.end(JSON.stringify(results));
+    response.end('error. non existent endpoint');
   }
   
-
+};
 
 
   // let body = '';
@@ -127,7 +126,7 @@ var requestHandler = function(request, response) {
   //   // response.write(JSON.stringify(body));
   //   response.end(body);
   // });
-};
+
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
