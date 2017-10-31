@@ -12,6 +12,15 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 var http = require('http');
+
+var results = {
+  results: [{
+    username: 'name',
+    roomname: 'room',
+    text: 'some text'
+  }]
+};
+
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
@@ -27,11 +36,7 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  var results = [{
-    username: 'name',
-    roomname: 'room',
-    text: 'some text'
-  }];
+
 
   var defaultCorsHeaders = {
     'access-control-allow-origin': '*',
@@ -41,12 +46,13 @@ var requestHandler = function(request, response) {
   };
 
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
-  // console.log('request: ', request)
+
+  var headers = defaultCorsHeaders;
   // The outgoing status.
   var statusCode = 200;
 
   // See the note below about CORS headers.
-  var headers = defaultCorsHeaders;
+  
 
   // Tell the client we are sending them plain text.
   //
@@ -55,10 +61,46 @@ var requestHandler = function(request, response) {
 
   headers['Content-Type'] = 'application/json';
   
+  if (request.url !== '/classes/messages') {
+    statusCode = 404;
+    response.writeHead(statusCode, headers);
+    response.end('error. non existent endpoint');
+  } else if (request.method === 'POST') {
+    // var string = '';
+    
+    request.on('data', function(chunk) {
+      var dataObj = JSON.parse(chunk);
+      results.results.push(dataObj);
+      // results.push(dataObj);
+      console.log(results);
+    }).on('end', function() {
+      
+      // response.on('error', (err) => {
+      //   console.error(err);
+      // });
+      // console.log(typeof string);
+
+      // var data = string.split('&');
+      // console.log('data: ', data);
+      // result.push({
+      //   username: data[0]
+      // })
+      statusCode = 201;
+      response.writeHead(statusCode, headers);
+      // var responseBody = {results};
+      // response.end(JSON.stringify(responseBody)); 
+           
+    });
+    response.end(JSON.stringify(results));
+  } else {
+    response.writeHead(statusCode, headers);
+     // console.log(results)
+    // var responseBody = {results};
+    // response.end(JSON.stringify(responseBody));
+    response.end(JSON.stringify(results));
+  }
   
-  response.writeHead(statusCode, headers);
-  var responseBody = {results};
-  response.end(JSON.stringify(responseBody));
+
 
 
   // let body = '';
@@ -96,6 +138,5 @@ var requestHandler = function(request, response) {
 //
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
-
 
 module.exports.requestHandler = requestHandler;

@@ -43,7 +43,7 @@ var app = {
     $.ajax({
       url: app.server,
       type: 'POST',
-      data: message,
+      data: JSON.stringify(message),
       success: function (data) {
         // Clear messages input
         app.$message.val('');
@@ -65,14 +65,14 @@ var app = {
       contentType: 'application/json',
       success: function(data) {
         // Don't bother if we have nothing to work with
-        if (!data.results || !data.results.length) { return; }
+        if (!data.results || !data.results.length) { console.log(data); return; }
 
         // Store messages for caching later
         app.messages = data.results;
 
         // Get the last message
         var mostRecentMessage = data.results[data.results.length - 1];
-
+        console.log('mostrecentmessage' + mostRecentMessage);
         // Only bother updating the DOM if we have a new message
         if (mostRecentMessage.objectId !== app.lastMessageId) {
           // Update the UI with the fetched rooms
